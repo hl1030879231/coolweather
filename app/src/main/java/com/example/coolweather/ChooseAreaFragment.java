@@ -2,6 +2,7 @@ package com.example.coolweather;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ public class ChooseAreaFragment extends Fragment {
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
+    private static final String TAG = "ChooseAreaFragment___Test";
     private ProgressDialog progressDialog;
     private TextView titleText;
     private Button backButton;
@@ -60,31 +62,44 @@ public class ChooseAreaFragment extends Fragment {
 
     //onCreateView()用来初始化用户视图
     //表示可以传入空值
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area,container,false);
         titleText = (TextView)view.findViewById(R.id.title_text);
         backButton = (Button)view.findViewById(R.id.back_button);
         listView = (ListView)view.findViewById(R.id.list_view);
         adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,dataList);
+        listView.setAdapter(adapter);
         return view;
     }
 
     //onActivityCreated()方法在activity创建完成后会启动，因此获取activity中的内容需要在这个方法里面
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(currentLevel == LEVEL_PROVINCE){
                     selectedProvince = provinceList.get(position);
-
+                    queryCitys();
+                }else if(currentLevel == LEVEL_CITY){
+                    selectedCity = cityList.get(position);
+                    queryCountys();
                 }
             }
         });
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(currentLevel == LEVEL_CITY){
+                    queryProvinces();
+                }else if(currentLevel == LEVEL_COUNTY){
+                    queryCitys();
+                }
+            }
+        });
+        queryProvinces();
     }
 
 
@@ -165,6 +180,7 @@ public class ChooseAreaFragment extends Fragment {
      */
     private void queryFromServer(String address,final String type) {
         showProgressDialog();
+        Log.d("ChooseAreaFragmentTest", "queryFromServer: test");
         HttpUtil.sendOkHttpRequest(address, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -227,7 +243,7 @@ public class ChooseAreaFragment extends Fragment {
      * 关闭进度条对话框
      */
     private void closeProgressDialog(){
-        if(progressDialog == null){
+        if(progressDialog != null){
             progressDialog.dismiss();
         }
     }
